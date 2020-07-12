@@ -112,7 +112,6 @@ void recvMsg(const int &client_sock)
       break;
     }
     printf("msg from client: %s\n", buffer);
-    send(client_sock, buffer, strlen(buffer) + 1, 0);
     memset(buffer, 0, 1024);
   }
 
