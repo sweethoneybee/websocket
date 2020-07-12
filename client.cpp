@@ -39,6 +39,10 @@ int main(void)
     return 1;
   }
 
+  printf("connect to server successfully!\n");
+  printf("server ip: %s\n", inet_ntoa(server_addr.sin_addr));
+  printf("type 'exit' to disconnect\n");
+
   std::thread t1(sendMsg, client_sock);
   std::thread t2(recvMsg, client_sock);
 
@@ -55,7 +59,7 @@ void sendMsg(const int &client_sock)
   char sendBuffer[1024];
 
   memset(sendBuffer, 0, sizeof(char) * 1024);
-  printf("enter the msg>> ");
+  printf("YOU>> ");
 
   while (inputMsg.compare("exit") != 0)
   {
@@ -85,7 +89,7 @@ void recvMsg(const int &client_sock)
   while ((recv_len = recv(client_sock, recvBuffer, 1024, 0)) > 0)
   {
     recvBuffer[recv_len] = '\0';
-    printf("\nmsg from server: %s", recvBuffer);
+    printf("\nSTRANGER: %s", recvBuffer);
     memset(recvBuffer, 0, sizeof(char) * 1024);
   }
 

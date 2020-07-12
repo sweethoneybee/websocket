@@ -8,12 +8,17 @@
 #include <iostream>
 #include <string>
 #include <thread>
-
+#include <mutex>
+#include <list>
 #define PORT 9999
 
-void recvMsg(const int &);
 void sendMsg(const int &);
+void recvMsg(const int &);
 
+std::mutex sm;
+std::list<std::thread> sends;
+std::list<std::thread> recvs;
+int maxUser = 5;
 int main(void)
 {
   int server_sock, client_sock;
@@ -59,13 +64,13 @@ int main(void)
   }
   printf("client ip: %s\n", inet_ntoa(client_addr.sin_addr));
 
-  std::thread t1(recvMsg, client_sock);
-  std::thread t2(sendMsg, client_sock);
+  std::thread t1(sendMsg, client_sock);
+  std::thread t2(recvMsg, client_sock);
 
   t1.join();
   t2.join();
-
   close(client_sock);
+
   close(server_sock);
   return 0;
 }
@@ -76,7 +81,7 @@ void sendMsg(const int &client_sock)
   char sendBuffer[1024];
 
   memset(sendBuffer, 0, sizeof(char) * 1024);
-  printf("enter the msg>> ");
+  printf("YOU>> ");
 
   while (inputMsg.compare("exit") != 0)
   {
@@ -90,10 +95,15 @@ void sendMsg(const int &client_sock)
     if (send(client_sock, sendBuffer, strlen(sendBuffer) + 1, 0) < 0)
     {
       printf("server closed!\n");
+      close(client_sock);
       return;
     }
     memset(sendBuffer, 0, sizeof(char) * 1024);
   }
+
+  memset(sendBuffer, 0, sizeof(char) * 1024);
+  send(client_sock, "server closed!\0", 14, 0);
+  close(client_sock);
   return;
 }
 
@@ -101,7 +111,7 @@ void recvMsg(const int &client_sock)
 {
   int recv_len;
   char buffer[1024];
-
+  memset(buffer, 0, 1024);
   while ((recv_len = recv(client_sock, buffer, 1024, 0)) > 0)
   {
     // 안전을 위해 받는 쪽, 보내는 쪽 둘다 \0 처리를 해줌.
@@ -109,9 +119,10 @@ void recvMsg(const int &client_sock)
     if (strcmp(buffer, "exit") == 0)
     {
       printf("disconnect...\n");
+      close(client_sock);
       break;
     }
-    printf("msg from client: %s\n", buffer);
+    printf("\nSTRANGER: %s\n", buffer);
     memset(buffer, 0, 1024);
   }
 
